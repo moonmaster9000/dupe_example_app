@@ -1,0 +1,8 @@
+.author
+  .name
+    = @author.name
+  .books
+    - @books.each do |book|
+      .book
+        .name
+          = book.name

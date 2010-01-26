@@ -13,6 +13,9 @@ module NavigationHelpers
     
     when /the books index page/
       books_path
+      
+    when /the books page for the author with id "(\d+)"/
+      books_author_path $1
 
     else
       raise "Can't find mapping from \"#{page_name}\" to a path.\n" +

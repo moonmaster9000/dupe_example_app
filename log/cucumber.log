@@ -19,3 +19,147 @@ REQUESTING PAGE: GET /books with {} and HTTP headers {}
 Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:19:40) [GET]
 Rendering books/index
 Completed in 18ms (View: 9 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:45:03) [GET]
+Rendering books/index
+Completed in 49ms (View: 16 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:49:30) [GET]
+Rendering books/index
+Completed in 26ms (View: 11 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:14:24) [GET]
+Rendering books/index
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2010-01-26 15:14:24) [GET]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:15:07) [GET]
+Rendering books/index
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2010-01-26 15:15:07) [GET]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:39:23) [GET]
+Rendering books/index
+Completed in 70ms (View: 44 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:41:37) [GET]
+Rendering books/index
+Completed in 24ms (View: 10 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:48:16) [GET]
+Rendering books/index
+Completed in 24ms (View: 10 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 15:52:11) [GET]
+Rendering books/index
+Completed in 25ms (View: 10 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing ApplicationController#books (for 127.0.0.1 at 2010-01-26 16:16:50) [GET]
+  Parameters: {"id"=>"1"}
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:44:47) [GET]
+  Parameters: {"id"=>"1"}
+
+
+Processing ApplicationController#books (for 127.0.0.1 at 2010-01-26 16:44:47) [GET]
+  Parameters: {"id"=>"1"}
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 16:44:47) [GET]
+Rendering books/index
+Completed in 141ms (View: 52 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:44:56) [GET]
+  Parameters: {"id"=>"1"}
+
+
+Processing ApplicationController#books (for 127.0.0.1 at 2010-01-26 16:44:56) [GET]
+  Parameters: {"id"=>"1"}
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:46:02) [GET]
+  Parameters: {"id"=>"1"}
+
+
+Processing ApplicationController#books (for 127.0.0.1 at 2010-01-26 16:46:02) [GET]
+  Parameters: {"id"=>"1"}
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:56:32) [GET]
+  Parameters: {"id"=>"1"}
+
+
+Processing ApplicationController#books (for 127.0.0.1 at 2010-01-26 16:56:32) [GET]
+  Parameters: {"id"=>"1"}
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 16:56:32) [GET]
+Rendering books/index
+Completed in 78ms (View: 10 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:57:13) [GET]
+  Parameters: {"id"=>"1"}
+Rendering authors/books
+Completed in 18ms (View: 9 | 200 OK [http://www.example.com/authors/1/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 16:57:13) [GET]
+Rendering books/index
+Completed in 14ms (View: 2 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 16:59:11) [GET]
+  Parameters: {"id"=>"1"}
+Rendering authors/books
+Completed in 114ms (View: 10 | 200 OK [http://www.example.com/authors/1/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 16:59:11) [GET]
+Rendering books/index
+Completed in 14ms (View: 2 | 200 OK [http://www.example.com/books]
+REQUESTING PAGE: GET /authors/1/books with {} and HTTP headers {}
+
+
+Processing AuthorsController#books (for 127.0.0.1 at 2010-01-26 17:00:20) [GET]
+  Parameters: {"id"=>"1"}
+Rendering authors/books
+Completed in 113ms (View: 10 | 200 OK [http://www.example.com/authors/1/books]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 17:00:20) [GET]
+Rendering books/index
+Completed in 13ms (View: 2 | 200 OK [http://www.example.com/books]
