@@ -1,0 +1,21 @@
+# Logfile created on Tue Jan 26 13:25:06 -0500 2010REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:18:26) [GET]
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2010-01-26 14:18:26) [GET]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:18:52) [GET]
+Rendering books/index
+
+
+Processing ApplicationController#index (for 127.0.0.1 at 2010-01-26 14:18:52) [GET]
+REQUESTING PAGE: GET /books with {} and HTTP headers {}
+
+
+Processing BooksController#index (for 127.0.0.1 at 2010-01-26 14:19:40) [GET]
+Rendering books/index
+Completed in 18ms (View: 9 | 200 OK [http://www.example.com/books]
