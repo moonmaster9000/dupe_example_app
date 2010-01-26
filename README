@@ -1,243 +1,554 @@
-== Welcome to Rails
+h1. Dupe tutorial
 
-Rails is a web-application framework that includes everything needed to create 
-database-backed web applications according to the Model-View-Control pattern. 
+In this tutorial, you will learn how to quickly and cleanly mock services with Dupe and Cucumber. We'll start with simple resource creation methods, and then DRY up our work using Dupe's facilities for quick resource prototyping.  
 
-This pattern splits the view (also called the presentation) into "dumb" templates
-that are primarily responsible for inserting pre-built data in between HTML tags.
-The model contains the "smart" domain objects (such as Account, Product, Person,
-Post) that holds all the business logic and knows how to persist themselves to
-a database. The controller handles the incoming requests (such as Save New Account,
-Update Product, Show Post) by manipulating the model and directing data to the view.
+h2. Context
 
-In Rails, the model is handled by what's called an object-relational mapping
-layer entitled Active Record. This layer allows you to present the data from
-database rows as objects and embellish these data objects with business logic
-methods. You can read more about Active Record in
-link:files/vendor/rails/activerecord/README.html.
+Let's assume we're going to create an application for browsing a library. The trick: we'll access the library books not through a database, but over services. For this, we'll use "ActiveResource", the rails library for managing restful resources. 
 
-The controller and view are handled by the Action Pack, which handles both
-layers by its two parts: Action View and Action Controller. These two layers
-are bundled in a single package due to their heavy interdependence. This is
-unlike the relationship between the Active Record and Action Pack that is much
-more separate. Each of these packages can be used independently outside of
-Rails.  You can read more about Action Pack in
-link:files/vendor/rails/actionpack/README.html.
+h2. Setting up our application
+
+If you haven't already, install the following gems: cucumber, cucumber-rails, rspec, rspec-rails, webrat, dupe
+
+Lets create our application:
+
+<pre>
+# rails library
+# cd library
+# script/generate cucumber
+# script/generate rspec
+# script/generate dupe
+</pre>
+
+Next, add dupe to your gem list in config/environments/cucumber.rb:
+
+<pre>
+config.gem "dupe"
+</pre>
+
+Also, since we'll be using HAML for our views in this tutorial, add "haml" to your gem list in config/environments.rb
+
+<pre>
+config.gem "haml"
+</pre>
+
+Lastly, since you won't be needing ActiveRecord, you might as well go ahead and remove it from the list of loaded libraries (config/environment.rb):
+
+<pre>
+config.frameworks -= [ :active_record]
+</pre>
+
+h2. Feature 1: List all books
+
+Lets create a (naively) simple feature: viewing all books in the library. 
+
+First, create the file features/books.feature, and add the following declarative scenario to it:
+
+<pre>
+<code class="cucumber">
+Feature: Viewing all books in the library
+
+  Scenario: the books index page
+    Given the library has lots of books
+    When I go to the books index page
+    Then I should see all of the books in the library
+</code>
+</pre>
+
+Next, run the feature (cucumber features/), watch it fail, then copy the missing step definitions into features/step_definitions/book_steps.rb.
+
+<pre>
+<code class="ruby">
+Given /^the library has lots of books$/ do
+  pending
+end
+
+Then /^I should see all of the books in the library$/ do
+  pending
+end
+</code>
+</pre>
+
+At this point, we need to mock some resources. In a normal database-driven rails app, we would probably use a library like "Factory Girl" to help us quickly prototype some data, but our application is service-driven, we'll use "Dupe" to fake our services for the purposes of testing. 
+
+Let's first consider translating "Given the library has lots of books" into a step definition. All we really want to do is to ensure that the library has a few books in it, so let's use Dupe to create a couple of books:
+
+<pre>
+<code class="ruby">
+Given /^the library has lots of books$/ do
+  Dupe.create :book, :name => "Rooby Rocks"
+  Dupe.create :book, :name => "Rails Rocks too!"
+end
+</code>
+</pre>
+
+We've created two books, each with different names. When Dupe creates a resource, it will automatically assign a unique (sequentially assigned) "id" attribute to it, much like a database would. 
+
+Next, let's implement "Then I should see all of the books in the library":
+
+<pre>
+<code class="ruby">
+Then /^I should see all of the books in the library$/ do
+  Then %{I should see "Rooby Rocks"}
+  Then %{I should see "Rails Rocks too!"}
+end
+</code>
+</pre>
+
+All we've done here is translate our declarative statement into two more detailed ("imperative") statements. "I should see" matches a webrat step definition (if you don't know what webrat is, read up on it on github). 
+
+Let's run our cucumber scenario again: 
+
+<pre>
+# cucumber features/
+Feature: Viewing all books in the library
+
+  Scenario: the books index page                      # features/books.feature:3
+    Given the library has lots of books               # features/step_definitions/book_steps.rb:1
+    When I go to the books index page                 # features/step_definitions/webrat_steps.rb:10
+      Can't find mapping from "the books index page" to a path.
+      Now, go and add a mapping in ./features/support/paths.rb (RuntimeError)
+      ./features/support/paths.rb:22:in `path_to'
+      ./features/step_definitions/webrat_steps.rb:11:in `/^I go to (.+)$/'
+      features/books.feature:5:in `When I go to the books index page'
+    Then I should see all of the books in the library # features/step_definitions/book_steps.rb:5
 
 
-== Getting Started
-
-1. At the command prompt, start a new Rails application using the <tt>rails</tt> command
-   and your application name. Ex: rails myapp
-2. Change directory into myapp and start the web server: <tt>script/server</tt> (run with --help for options)
-3. Go to http://localhost:3000/ and get "Welcome aboard: You're riding the Rails!"
-4. Follow the guidelines to start developing your application
+    Logged Requests:
 
 
-== Web Servers
+Failing Scenarios:
+cucumber features/books.feature:3 # Scenario:
+</pre>
 
-By default, Rails will try to use Mongrel if it's are installed when started with script/server, otherwise Rails will use WEBrick, the webserver that ships with Ruby. But you can also use Rails
-with a variety of other web servers.
+It failed, but don't worry, that was expected. We have to tell webrat how to translate "the books index page" into a path. Open up features/support/paths.rb and add the following when condition into it: 
 
-Mongrel is a Ruby-based webserver with a C component (which requires compilation) that is
-suitable for development and deployment of Rails applications. If you have Ruby Gems installed,
-getting up and running with mongrel is as easy as: <tt>gem install mongrel</tt>.
-More info at: http://mongrel.rubyforge.org
+<pre>
+<code class="ruby">
+when /the books index page/
+  books_path
+</code>
+</pre>
 
-Say other Ruby web servers like Thin and Ebb or regular web servers like Apache or LiteSpeed or
-Lighttpd or IIS. The Ruby web servers are run through Rack and the latter can either be setup to use
-FCGI or proxy to a pack of Mongrels/Thin/Ebb servers.
+You'll also need to add a route for books to routes.rb: 
 
-== Apache .htaccess example for FCGI/CGI
+<pre>
+<code class="ruby">
+ActionController::Routing::Routes.draw do |map|
+  map.resources :books
+end
+</code>
+</pre>
 
-# General Apache options
-AddHandler fastcgi-script .fcgi
-AddHandler cgi-script .cgi
-Options +FollowSymLinks +ExecCGI
+And though I'd normally recommend rspecc'ing the controller/models/views, for the sake of brevity, to help keep this tutorial focused on Dupe, we'll simply create them:
 
-# If you don't want Rails to look in certain directories,
-# use the following rewrite rules so that Apache won't rewrite certain requests
-# 
-# Example:
-#   RewriteCond %{REQUEST_URI} ^/notrails.*
-#   RewriteRule .* - [L]
+<pre>
+# app/controllers/books_controller.rb
 
-# Redirect all requests not available on the filesystem to Rails
-# By default the cgi dispatcher is used which is very slow
-# 
-# For better performance replace the dispatcher with the fastcgi one
-#
-# Example:
-#   RewriteRule ^(.*)$ dispatch.fcgi [QSA,L]
-RewriteEngine On
-
-# If your Rails application is accessed via an Alias directive,
-# then you MUST also set the RewriteBase in this htaccess file.
-#
-# Example:
-#   Alias /myrailsapp /path/to/myrailsapp/public
-#   RewriteBase /myrailsapp
-
-RewriteRule ^$ index.html [QSA]
-RewriteRule ^([^.]+)$ $1.html [QSA]
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteRule ^(.*)$ dispatch.cgi [QSA,L]
-
-# In case Rails experiences terminal errors
-# Instead of displaying this message you can supply a file here which will be rendered instead
-# 
-# Example:
-#   ErrorDocument 500 /500.html
-
-ErrorDocument 500 "<h2>Application error</h2>Rails application failed to start properly"
-
-
-== Debugging Rails
-
-Sometimes your application goes wrong.  Fortunately there are a lot of tools that
-will help you debug it and get it back on the rails.
-
-First area to check is the application log files.  Have "tail -f" commands running
-on the server.log and development.log. Rails will automatically display debugging
-and runtime information to these files. Debugging info will also be shown in the
-browser on requests from 127.0.0.1.
-
-You can also log your own messages directly into the log file from your code using
-the Ruby logger class from inside your controllers. Example:
-
-  class WeblogController < ActionController::Base
-    def destroy
-      @weblog = Weblog.find(params[:id])
-      @weblog.destroy
-      logger.info("#{Time.now} Destroyed Weblog ID ##{@weblog.id}!")
-    end
+<code class="ruby">
+class BooksController < ApplicationController
+  def index 
+    @books = Book.find :all
   end
+end
+</code>
+</pre>
 
-The result will be a message in your log file along the lines of:
+<pre>
+# app/models/book.rb
 
-  Mon Oct 08 14:22:29 +1000 2007 Destroyed Weblog ID #1
+<code class="ruby">
+class Book < ActiveResource::Base
+  # you can also just set this to an empty string, it doesn't
+  # really matter since we don't yet have a service backend
+  self.site = 'http://some.service.provider.com'
+end
+</code>
+</pre>
 
-More information on how to use the logger is at http://www.ruby-doc.org/core/
+<pre>
+# app/views/books/index.haml
 
-Also, Ruby documentation can be found at http://www.ruby-lang.org/ including:
+<code class="haml">
+.books
+  - @books.each do |book|
+    .book
+      .name
+        = book.name
+</code>
+</pre>
 
-* The Learning Ruby (Pickaxe) Book: http://www.ruby-doc.org/docs/ProgrammingRuby/
-* Learn to Program: http://pine.fm/LearnToProgram/  (a beginners guide)
+Great! Now if we run "cucumber features/" again, they should all pass. 
 
-These two online (and free) books will bring you up to speed on the Ruby language
-and also on programming in general.
+h2. Updating Feature 1 to see the authors of books
 
+Now let's suppose that our client has asked us to update this feature. In addition to seeing the titles of books, they also want to see the authors that wrote the books. 
 
-== Debugger
+In order to accomplish this, let's assume that a book has_one author, and update our step definitions accordingly: 
 
-Debugger support is available through the debugger command when you start your Mongrel or
-Webrick server with --debugger. This means that you can break out of execution at any point
-in the code, investigate and change the model, AND then resume execution! 
-You need to install ruby-debug to run the server in debugging mode. With gems, use 'gem install ruby-debug'
-Example:
+<pre>
+<code class="ruby">
+Given /^the library has lots of books$/ do
+  Dupe.create :book, :name => "Rooby Rocks", :author => (Dupe.create :author, :name => 'Matz')
+  Dupe.create :book, :name => "Rails Rocks too!", :author => (Dupe.create :author, :name => 'DHH')
+end
 
-  class WeblogController < ActionController::Base
-    def index
-      @posts = Post.find(:all)
-      debugger
-    end
+Then /^I should see all of the books in the library$/ do
+  Then %{I should see "Rooby Rocks"}
+  Then %{I should see "by Matz"}
+  Then %{I should see "Rails Rocks too!"}
+  Then %{I should see "by DHH"}
+end
+</code>
+</pre>
+
+Run "cucumber features/", watch it fail, then update your view to make it pass: 
+
+<pre>
+# app/views/books/index.haml
+
+<code class="haml">
+.books
+  - @books.each do |book|
+    .book
+      .name
+        = book.name
+      .author
+        .name
+          = "by #{book.author.name}"
+</code>
+</pre>
+
+Now it should pass. 
+
+h2. Refactor
+
+Already, our step definitions are starting to look slightly unwieldy. Just imagine if the client asked us to display genres, publishers, descriptions, etc. Our "Given the library has lots of books" step definition would be clogged with resource creations. 
+
+But don't worry, we've barely scratched the surface of what's possible with Dupe. Like Factory Girl, Dupe comes with a host of tools that make it possible for you to quickly create resources for the purposes of testing. 
+
+We can start by defining exactly what a book should consist of. Create a new file features/dupe/definitions/books.rb: 
+
+<pre>
+# features/dupe/definitions/books.rb
+
+<code class="ruby">
+Dupe.define :book do |book|
+  book.name
+  book.author
+end
+</code>
+</pre>
+
+Basically, all we've said is that any book object should have "name" and "author" attributes. Now a "Dupe.create :book" will create a Duped book object with "name" and "author" attributes. The easiest way to see what I'm talking about is to fire up irb and try it out: 
+
+<pre>
+irb# require 'dupe'
+  ==> true
+
+irb# Dupe.define :book do |book|
+ --#   book.name
+ --#   book.author
+ --# end
+
+irb# Dupe.create :book
+  ==> <#Duped::Book author=nil id=1 name=nil>
+
+irb# Dupe.create :book
+  ==> <#Duped::Book author=nil id=2 name=nil>
+</pre>
+
+Lets update our step definitions and see what happens: 
+
+<pre>
+<code class="ruby">
+Given /^the library has lots of books$/ do
+  Dupe.stub 2, :books
+end
+
+Then /^I should see all of the books in the library$/ do
+  Dupe.find(:books).each do |book|
+    Then %{I should see "#{book.name}"}
+    Then %{I should see "by #{book.author.name}"}
   end
+end
+</code>
+</pre>
 
-So the controller will accept the action, run the first line, then present you
-with a IRB prompt in the server window. Here you can do things like:
+Here I've introduced two new methods: Dupe.stub, and Dupe.find. Dupe.stub allows us to quickly generate an arbitrary number of resource (in this case two). It also supports a third argument of options, including a record template. Check out the API docs for more info (http://moonmaster9000.github.com/dupe/api/). 
 
-  >> @posts.inspect
-  => "[#<Post:0x14a6be8 @attributes={\"title\"=>nil, \"body\"=>nil, \"id\"=>\"1\"}>,
-       #<Post:0x14a6620 @attributes={\"title\"=>\"Rails you know!\", \"body\"=>\"Only ten..\", \"id\"=>\"2\"}>]"
-  >> @posts.first.title = "hello from a debugger"
-  => "hello from a debugger"
+Dupe.find allows us to find resources we've created. Later we'll see how to pass a proc to this method to filter the result set. In this case, Dupe.find(:books) will return an array of all books we've created. 
 
-...and even better is that you can examine how your runtime objects actually work:
+If you run "cucumber features/", it will fail. Why? "Dupe.stub 2, :books" created two book resources based on our book definition. However, our definition didn't specify any default values for the "name" and "author" attributes, so they simply got nil values. Obviously, we need actual data. Let's update our definition: 
 
-  >> f = @posts.first
-  => #<Post:0x13630c4 @attributes={"title"=>nil, "body"=>nil, "id"=>"1"}>
-  >> f.
-  Display all 152 possibilities? (y or n)
+<pre>
+# features/dupe/definitions/books.rb
 
-Finally, when you're ready to resume execution, you enter "cont"
+<code class="ruby">
+Dupe.define :book do |book|
+  book.name 'default name'
+  book.author do 
+    Dupe.create :author
+  end
+end
+
+Dupe.define :author do |author|
+  author.name 'default name'
+end
+</code>
+</pre>
+
+Now we're saying that a book should have both "name" and "author" attributes, that the "name" attribute should default to 'default name', and that the "author" attribute should default to a newly created "author" resource. We've also specified that an :author resource should have a "name" attribute defaulted to 'default name'. 
+
+Again, lets drop down to irb to get a better picture of what this will give us: 
+
+<pre>
+irb# require 'dupe'
+  ==> true
+
+irb# Dupe.define :book do |book|
+ --#   book.name 'default name'
+ --#   book.author do 
+ --#     Dupe.create :author
+ --#   end
+ --# end
+
+irb# Dupe.define :author do |author|
+ --#   author.name 'default name'
+ --# end
+
+irb# Dupe.create :book
+  ==> <#Duped::Book author=<#Duped::Author name="default name" id=1> name="default name" id=1>
+
+irb# Dupe.create :book
+  ==> <#Duped::Book author=<#Duped::Author name="default name" id=2> name="default name" id=2>
+
+irb# Dupe.create :book, :name => 'Rooby'
+  ==> <#Duped::Book author=<#Duped::Author name="default name" id=3> name="Rooby" id=3>
+
+irb# Dupe.create :book, :name => 'Rails', :author => (Dupe.create :author, :name => 'DHH')
+  ==> <#Duped::Book author=<#Duped::Author name="DHH" id=4> name="Rails" id=4>
+</pre>
+
+You can see that each time we created a book, the book got both a name and an author. Dupe gave these attributes their appropriate default values when we didn't manually specify what the "name" or "author" attribute should be. 
+
+Now let's run our cucumber feature again ("cucumber features/"). 
+
+They pass! But wait! What did that view actually contain? It basically would have looked like: 
+
+<pre>
+  default name, by default name
+  default name, by default name
+</pre>
+
+That's a pretty good indication that we haven't created very good test data, especially we could change the view to this and still have the feature passing: 
+
+<pre>
+# app/views/books/index.haml
+
+<code class="haml">
+.books
+  - @books.each do |book|
+    .book
+      .name
+        = book.name
+      .author
+        .name
+          = "by #{book.name}"
+</code>
+</pre>
+
+Notice that I've changed the display to set the author name to the book name. Since we created such poor test data, our feature still passes. 
+
+So, how do we rectify this situation? Lets use the "uniquify" method:
+
+<pre>
+<code class="ruby">
+Dupe.define :book do |book|
+  book.uniquify :name
+  book.author do 
+    Dupe.create :author
+  end
+end
+
+Dupe.define :author do |author|
+  author.uniquify :name
+end
+</code>
+</pre>
+
+Notice the lines "book.uniquify :name" and "author.uniquify :name". Basically, Dupe will attempt to default the book name and author name on a newly created resource to a unique value. (I'll leave it to you to drop down to irb and test that out). 
+
+Now run cucumber features (I'm assuming you still have the improper books/index.haml view). They fail as expected! No we've got better test data. Lets go back and fix our view: 
+ 
+<pre>
+# app/views/books/index.haml
+
+<code class="haml">
+.books
+  - @books.each do |book|
+    .book
+      .name
+        = book.name
+      .author
+        .name
+          = "by #{book.author.name}"
+</code>
+</pre>
+
+Now run "cucumber features/" and watch them pass. 
+
+h2. Feature 2: Viewing all the books by a particular author. 
+
+Lets assume our client would also like a page for viewing all the books by a particular author. We'll start with a new scenario: 
+
+<pre>
+# features/authors.feature
+<code class="ruby">
+Feature: Viewing content related to authors
+
+  Scenario: the books written by a particular author page
+    Given an author with many books
+    When I view the books page for that author
+    Then I should see the name of that author
+    And I should see all of the books written by that author
+</code>
+</pre>
+
+Next, let's define the step definitions for this:
+
+<pre>
+<code class="ruby">
+Given /^an author with many books$/ do
+  @author = Dupe.create :author
+  @books = Dupe.stub 10, :books, :like => {:author => @author}
+end
+
+When /^I view the books page for that author$/ do
+  When %{I go to the books page for the author with id "#{@author.id}"}
+end
+
+Then /^I should see the name of that author$/ do
+  Then %{I should see "#{@author.name}"}
+end
+
+Then /^I should see all of the books written by that author$/ do
+  @books.each do |book|
+    Then %{I should see "#{book.name}"}
+  end
+end
+</code>
+</pre>
+
+Notice that I've passed that third argument to stub I mentioned a while ago. For a detailed explanation, check the api docs, but suffice to say, I'm basically asking Dupe to give me 10 books, each with an author attribute with a value equal to @author. 
+
+Next, we'll need to setup some paths, routes, and controllers. Since there's nothing new in really any of this, I'll breeze through it: 
 
 
-== Console
+<pre>
+# features/support/paths.rb
+<code class="ruby">
+    when /the books page for the author with id "(\d+)"/
+      books_author_path $1
+</code>
+</pre>
 
-You can interact with the domain model by starting the console through <tt>script/console</tt>.
-Here you'll have all parts of the application configured, just like it is when the
-application is running. You can inspect domain models, change values, and save to the
-database. Starting the script without arguments will launch it in the development environment.
-Passing an argument will specify a different environment, like <tt>script/console production</tt>.
+<pre>
+# config/routes.rb
 
-To reload your controllers and models after launching the console run <tt>reload!</tt>
+<code class="ruby">
+ActionController::Routing::Routes.draw do |map|
+  map.resources :books
+  map.resources :authors, :member => "books"
+end
+</code>
+</pre>
 
-== dbconsole
+<pre>
+# app/controllers/authors_controller.rb
 
-You can go to the command line of your database directly through <tt>script/dbconsole</tt>.
-You would be connected to the database with the credentials defined in database.yml.
-Starting the script without arguments will connect you to the development database. Passing an
-argument will connect you to a different database, like <tt>script/dbconsole production</tt>.
-Currently works for mysql, postgresql and sqlite.
+<code class="ruby">
+class AuthorsController < ApplicationController
+  
+  def books
+    @author = Author.find params[:id]
+    @books = Book.find :all, :params => {:author_id => @author.id}
+  end
+  
+end
+</code>
+</pre>
 
-== Description of Contents
+<pre>
+# app/views/authors/books.haml
 
-app
-  Holds all the code that's specific to this particular application.
+<code class="haml">
+.author
+  .name
+    = @author.name
+  .books
+    - @books.each do |book|
+      .book
+        .name
+          = book.name
+</code>
+</pre>
 
-app/controllers
-  Holds controllers that should be named like weblogs_controller.rb for
-  automated URL mapping. All controllers should descend from ApplicationController
-  which itself descends from ActionController::Base.
+<pre>
+# app/models/author.rb
 
-app/models
-  Holds models that should be named like post.rb.
-  Most models will descend from ActiveRecord::Base.
+<code class="ruby">
+class Author < ActiveResource::Base
+  self.site = ''
+end
+</code>
+</pre>
 
-app/views
-  Holds the template files for the view that should be named like
-  weblogs/index.html.erb for the WeblogsController#index action. All views use eRuby
-  syntax.
+Now if we run "cucumber features/authors.feature", we'll get the following error: 
 
-app/views/layouts
-  Holds the template files for layouts to be used with views. This models the common
-  header/footer method of wrapping views. In your views, define a layout using the
-  <tt>layout :default</tt> and create a file named default.html.erb. Inside default.html.erb,
-  call <% yield %> to render the view using this layout.
+<pre>
+$ cucumber features/authors.feature 
+Feature: Viewing content related to authors
 
-app/helpers
-  Holds view helpers that should be named like weblogs_helper.rb. These are generated
-  for you automatically when using script/generate for controllers. Helpers can be used to
-  wrap functionality for your views into methods.
+  Scenario: the books written by a particular author page    # features/authors.feature:3
+    Given an author with many books                          # features/step_definitions/author_steps.rb:1
+    When I view the books page for that author               # features/step_definitions/author_steps.rb:6
+      No mocked service response found for '/books.xml?author_id=1' (Dupe::Network::RequestNotFoundError)
+      ./app/controllers/authors_controller.rb:5:in `books'
+      (eval):2:in `visit'
+      ./features/step_definitions/webrat_steps.rb:11:in `/^I go to (.+)$/'
+      features/authors.feature:5:in `When I view the books page for that author'
+    Then I should see the name of that author                # features/step_definitions/author_steps.rb:10
+    And I should see all of the books written by that author # features/step_definitions/author_steps.rb:14
 
-config
-  Configuration files for the Rails environment, the routing map, the database, and other dependencies.
 
-db
-  Contains the database schema in schema.rb.  db/migrate contains all
-  the sequence of Migrations for your schema.
+    Logged Requests:
+      Request: GET /authors/1.xml
+      Response:
+        <?xml version="1.0" encoding="UTF-8"?>
+        <author>
+          <name>author 1 name</name>
+          <id type="integer">1</id>
+        </author>
 
-doc
-  This directory is where your application documentation will be stored when generated
-  using <tt>rake doc:app</tt>
 
-lib
-  Application specific libraries. Basically, any kind of custom code that doesn't
-  belong under controllers, models, or helpers. This directory is in the load path.
+Failing Scenarios:
+cucumber features/authors.feature:3
+</pre>
 
-public
-  The directory available for the web server. Contains subdirectories for images, stylesheets,
-  and javascripts. Also contains the dispatchers and the default HTML files. This should be
-  set as the DOCUMENT_ROOT of your web server.
+Basically, Dupe is telling us that it doesn't know how to interpret the request "/books.xml?author_id=1", which was caused by the line in our AuthorsController books action "@books = Book.find :all, :params => {:author_id => @author.id}". 
 
-script
-  Helper scripts for automation and generation.
+Dupe, by default, can only anticipate simply find(:all) and find(<id>) requests. To handle this service mock, we can create a custom intercept mock in features/dupe/custom_mocks/books.rb
 
-test
-  Unit and functional tests along with fixtures. When using the script/generate scripts, template
-  test files will be generated for you and placed in this directory.
+<pre>
+# features/dupe/custom_mocks/books.rb
+<code class="ruby">
+Get %r{/books\.xml\?author_id=(\d+)} do |author_id|
+  Dupe.find(:books) {|b| b.author.id == author_id.to_i }
+end
+</code>
+</pre>
 
-vendor
-  External libraries that the application depends on. Also includes the plugins subdirectory.
-  If the app has frozen rails, those gems also go here, under vendor/rails/.
-  This directory is in the load path.
+Not unlike a cucumber step definition, this will create a regular expression matcher for the service url, which we then translate into a Dupe resource query. Notice that we pass a block to our Dupe.find method call. Checkout the API docs for more info, but essentially, this translates as "Find all the books written by the author with id X". One little gotcha: notice the to_i on the author_id (b.author.id is an integer, but the regular expression will return string matches). 
+
+Now run your feature again and watch it pass! 
