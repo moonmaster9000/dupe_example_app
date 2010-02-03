@@ -155,7 +155,6 @@ end
 <pre>
 # app/views/books/index.haml
 
-
 .books
   - @books.each do |book|
     .book
@@ -189,7 +188,6 @@ Run "cucumber features/", watch it fail, then update your view to make it pass:
 
 <pre>
 # app/views/books/index.haml
-
 
 .books
   - @books.each do |book|
@@ -324,7 +322,6 @@ That's a pretty good indication that we haven't created very good test data, esp
 <pre>
 # app/views/books/index.haml
 
-
 .books
   - @books.each do |book|
     .book
@@ -358,7 +355,6 @@ Now run cucumber features (I'm assuming you still have the improper books/index.
  
 <pre>
 # app/views/books/index.haml
-
 
 .books
   - @books.each do |book|
@@ -548,9 +544,9 @@ end
 
 def search
   if params[:q]
-    @authors = Author.find(:all, :params => {:q => params[:q]}, :from => :search)
+    @authors = Author.find :all, :params => {:q => params[:q]}, :from => :search
   end
-end
+end  
 </pre>
 
 <pre>

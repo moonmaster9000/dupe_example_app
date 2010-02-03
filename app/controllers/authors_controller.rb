@@ -6,7 +6,7 @@ class AuthorsController < ApplicationController
   
   def search
     if params[:q]
-      @authors = Author.find(:all, :params => {:q => params[:q]}, :from => :search)
+      @authors = Author.find :all, :params => {:q => params[:q]}, :from => :search
     end
   end  
 end
