@@ -45,20 +45,17 @@ Lets create a (naively) simple feature: viewing all books in the library.
 First, create the file features/books.feature, and add the following declarative scenario to it:
 
 <pre>
-<code class="cucumber">
 Feature: Viewing all books in the library
 
   Scenario: the books index page
     Given the library has lots of books
     When I go to the books index page
     Then I should see all of the books in the library
-</code>
 </pre>
 
 Next, run the feature (cucumber features/), watch it fail, then copy the missing step definitions into features/step_definitions/book_steps.rb.
 
 <pre>
-<code class="ruby">
 Given /^the library has lots of books$/ do
   pending
 end
@@ -66,7 +63,6 @@ end
 Then /^I should see all of the books in the library$/ do
   pending
 end
-</code>
 </pre>
 
 At this point, we need to mock some resources. In a normal database-driven rails app, we would probably use a library like "Factory Girl" to help us quickly prototype some data, but our application is service-driven, we'll use "Dupe" to fake our services for the purposes of testing. 
@@ -74,12 +70,10 @@ At this point, we need to mock some resources. In a normal database-driven rails
 Let's first consider translating "Given the library has lots of books" into a step definition. All we really want to do is to ensure that the library has a few books in it, so let's use Dupe to create a couple of books:
 
 <pre>
-<code class="ruby">
 Given /^the library has lots of books$/ do
   Dupe.create :book, :name => "Rooby Rocks"
   Dupe.create :book, :name => "Rails Rocks too!"
 end
-</code>
 </pre>
 
 We've created two books, each with different names. When Dupe creates a resource, it will automatically assign a unique (sequentially assigned) "id" attribute to it, much like a database would. 
@@ -87,12 +81,10 @@ We've created two books, each with different names. When Dupe creates a resource
 Next, let's implement "Then I should see all of the books in the library":
 
 <pre>
-<code class="ruby">
 Then /^I should see all of the books in the library$/ do
   Then %{I should see "Rooby Rocks"}
   Then %{I should see "Rails Rocks too!"}
 end
-</code>
 </pre>
 
 All we've done here is translate our declarative statement into two more detailed ("imperative") statements. "I should see" matches a webrat step definition (if you don't know what webrat is, read up on it on github). 
@@ -124,20 +116,16 @@ cucumber features/books.feature:3 # Scenario:
 It failed, but don't worry, that was expected. We have to tell webrat how to translate "the books index page" into a path. Open up features/support/paths.rb and add the following when condition into it: 
 
 <pre>
-<code class="ruby">
 when /the books index page/
   books_path
-</code>
 </pre>
 
 You'll also need to add a route for books to routes.rb: 
 
 <pre>
-<code class="ruby">
 ActionController::Routing::Routes.draw do |map|
   map.resources :books
 end
-</code>
 </pre>
 
 And though I'd normally recommend rspecc'ing the controller/models/views, for the sake of brevity, to help keep this tutorial focused on Dupe, we'll simply create them:
@@ -145,37 +133,32 @@ And though I'd normally recommend rspecc'ing the controller/models/views, for th
 <pre>
 # app/controllers/books_controller.rb
 
-<code class="ruby">
 class BooksController < ApplicationController
   def index 
     @books = Book.find :all
   end
 end
-</code>
 </pre>
 
 <pre>
 # app/models/book.rb
 
-<code class="ruby">
 class Book < ActiveResource::Base
   # you can also just set this to an empty string, it doesn't
   # really matter since we don't yet have a service backend
   self.site = 'http://some.service.provider.com'
 end
-</code>
 </pre>
 
 <pre>
 # app/views/books/index.haml
 
-<code class="haml">
+
 .books
   - @books.each do |book|
     .book
       .name
         = book.name
-</code>
 </pre>
 
 Great! Now if we run "cucumber features/" again, they should all pass. 
@@ -187,7 +170,6 @@ Now let's suppose that our client has asked us to update this feature. In additi
 In order to accomplish this, let's assume that a book has_one author, and update our step definitions accordingly: 
 
 <pre>
-<code class="ruby">
 Given /^the library has lots of books$/ do
   Dupe.create :book, :name => "Rooby Rocks", :author => (Dupe.create :author, :name => 'Matz')
   Dupe.create :book, :name => "Rails Rocks too!", :author => (Dupe.create :author, :name => 'DHH')
@@ -199,7 +181,6 @@ Then /^I should see all of the books in the library$/ do
   Then %{I should see "Rails Rocks too!"}
   Then %{I should see "by DHH"}
 end
-</code>
 </pre>
 
 Run "cucumber features/", watch it fail, then update your view to make it pass: 
@@ -207,7 +188,7 @@ Run "cucumber features/", watch it fail, then update your view to make it pass:
 <pre>
 # app/views/books/index.haml
 
-<code class="haml">
+
 .books
   - @books.each do |book|
     .book
@@ -216,7 +197,6 @@ Run "cucumber features/", watch it fail, then update your view to make it pass:
       .author
         .name
           = "by #{book.author.name}"
-</code>
 </pre>
 
 Now it should pass. 
@@ -232,12 +212,10 @@ We can start by defining exactly what a book should consist of. Create a new fil
 <pre>
 # features/dupe/definitions/books.rb
 
-<code class="ruby">
 Dupe.define :book do |book|
   book.name
   book.author
 end
-</code>
 </pre>
 
 Basically, all we've said is that any book object should have "name" and "author" attributes. Now a "Dupe.create :book" will create a Duped book object with "name" and "author" attributes. The easiest way to see what I'm talking about is to fire up irb and try it out: 
@@ -261,7 +239,6 @@ irb# Dupe.create :book
 Lets update our step definitions and see what happens: 
 
 <pre>
-<code class="ruby">
 Given /^the library has lots of books$/ do
   Dupe.stub 2, :books
 end
@@ -272,7 +249,6 @@ Then /^I should see all of the books in the library$/ do
     Then %{I should see "by #{book.author.name}"}
   end
 end
-</code>
 </pre>
 
 Here I've introduced two new methods: Dupe.stub, and Dupe.find. Dupe.stub allows us to quickly generate an arbitrary number of resource (in this case two). It also supports a third argument of options, including a record template. Check out the API docs for more info (http://moonmaster9000.github.com/dupe/api/). 
@@ -284,7 +260,6 @@ If you run "cucumber features/", it will fail. Why? "Dupe.stub 2, :books" create
 <pre>
 # features/dupe/definitions/books.rb
 
-<code class="ruby">
 Dupe.define :book do |book|
   book.name 'default name'
   book.author do 
@@ -295,7 +270,6 @@ end
 Dupe.define :author do |author|
   author.name 'default name'
 end
-</code>
 </pre>
 
 Now we're saying that a book should have both "name" and "author" attributes, that the "name" attribute should default to 'default name', and that the "author" attribute should default to a newly created "author" resource. We've also specified that an :author resource should have a "name" attribute defaulted to 'default name'. 
@@ -346,7 +320,7 @@ That's a pretty good indication that we haven't created very good test data, esp
 <pre>
 # app/views/books/index.haml
 
-<code class="haml">
+
 .books
   - @books.each do |book|
     .book
@@ -355,7 +329,6 @@ That's a pretty good indication that we haven't created very good test data, esp
       .author
         .name
           = "by #{book.name}"
-</code>
 </pre>
 
 Notice that I've changed the display to set the author name to the book name. Since we created such poor test data, our feature still passes. 
@@ -363,7 +336,6 @@ Notice that I've changed the display to set the author name to the book name. Si
 So, how do we rectify this situation? Lets use the "uniquify" method:
 
 <pre>
-<code class="ruby">
 Dupe.define :book do |book|
   book.uniquify :name
   book.author do 
@@ -374,7 +346,6 @@ end
 Dupe.define :author do |author|
   author.uniquify :name
 end
-</code>
 </pre>
 
 Notice the lines "book.uniquify :name" and "author.uniquify :name". Basically, Dupe will attempt to default the book name and author name on a newly created resource to a unique value. (I'll leave it to you to drop down to irb and test that out). 
@@ -384,7 +355,7 @@ Now run cucumber features (I'm assuming you still have the improper books/index.
 <pre>
 # app/views/books/index.haml
 
-<code class="haml">
+
 .books
   - @books.each do |book|
     .book
@@ -393,18 +364,19 @@ Now run cucumber features (I'm assuming you still have the improper books/index.
       .author
         .name
           = "by #{book.author.name}"
-</code>
 </pre>
 
 Now run "cucumber features/" and watch them pass. 
 
 h2. Feature 2: Viewing all the books by a particular author. 
 
+During this feature, we'll learn more about "Dupe.stub" and cyclically referential data.
+
 Lets assume our client would also like a page for viewing all the books by a particular author. We'll start with a new scenario: 
 
 <pre>
 # features/authors.feature
-<code class="ruby">
+
 Feature: Viewing content related to authors
 
   Scenario: the books written by a particular author page
@@ -412,16 +384,14 @@ Feature: Viewing content related to authors
     When I view the books page for that author
     Then I should see the name of that author
     And I should see all of the books written by that author
-</code>
 </pre>
 
 Next, let's define the step definitions for this:
 
 <pre>
-<code class="ruby">
 Given /^an author with many books$/ do
   @author = Dupe.create :author
-  @books = Dupe.stub 10, :books, :like => {:author => @author}
+  @author.books = Dupe.stub 10, :books, :like => {:author => @author}
 end
 
 When /^I view the books page for that author$/ do
@@ -437,118 +407,203 @@ Then /^I should see all of the books written by that author$/ do
     Then %{I should see "#{book.name}"}
   end
 end
-</code>
 </pre>
 
 Notice that I've passed that third argument to stub I mentioned a while ago. For a detailed explanation, check the api docs, but suffice to say, I'm basically asking Dupe to give me 10 books, each with an author attribute with a value equal to @author. 
 
-Next, we'll need to setup some paths, routes, and controllers. Since there's nothing new in really any of this, I'll breeze through it: 
+This means that you can model fully referential objects with Dupe just like you would expect to find in a database. In this case, we're modeling "book has_one author, author has_many books". So how does Dupe turn a cyclical structure like our @author (our @author has many books, each of which have an :author attribute that points back to @author) into a flat, non-referential structure like XML? Though ActiveSupport's to_xml method out of the box doesn't support this feature, inside of Dupe is a special hash pruning algorithm that removes cyclical edges from the record before converting it into XML, resulting in XML essentially the same as what you would get with ActiveRecord's to_xml method.
 
+Next, we'll need to setup some paths, routes, and controllers. Since there's nothing new in really any of this, I'll breeze through it: 
 
 <pre>
 # features/support/paths.rb
-<code class="ruby">
-    when /the books page for the author with id "(\d+)"/
-      books_author_path $1
-</code>
+
+  when /the books page for the author with id "(\d+)"/
+    books_author_path $1
 </pre>
 
 <pre>
 # config/routes.rb
 
-<code class="ruby">
 ActionController::Routing::Routes.draw do |map|
   map.resources :books
   map.resources :authors, :member => "books"
 end
-</code>
 </pre>
 
 <pre>
 # app/controllers/authors_controller.rb
 
-<code class="ruby">
 class AuthorsController < ApplicationController
   
   def books
     @author = Author.find params[:id]
-    @books = Book.find :all, :params => {:author_id => @author.id}
   end
   
 end
-</code>
 </pre>
 
 <pre>
 # app/views/authors/books.haml
 
-<code class="haml">
 .author
   .name
     = @author.name
   .books
-    - @books.each do |book|
+    - @author.books.each do |book|
       .book
         .name
           = book.name
-</code>
 </pre>
 
 <pre>
 # app/models/author.rb
 
-<code class="ruby">
 class Author < ActiveResource::Base
   self.site = ''
 end
-</code>
 </pre>
 
-Now if we run "cucumber features/authors.feature", we'll get the following error: 
+And that's it! It's as simple as that.
+
+
+
+h2. Feature 3: Searching books by author 
+
+During this feature, we'll learn about Dupe "intercept mocking". 
+
+Let's suppose our client wants the ability to search authors:
 
 <pre>
-$ cucumber features/authors.feature 
-Feature: Viewing content related to authors
+# features/search_authors.feature
 
-  Scenario: the books written by a particular author page    # features/authors.feature:3
-    Given an author with many books                          # features/step_definitions/author_steps.rb:1
-    When I view the books page for that author               # features/step_definitions/author_steps.rb:6
-      No mocked service response found for '/books.xml?author_id=1' (Dupe::Network::RequestNotFoundError)
-      ./app/controllers/authors_controller.rb:5:in `books'
-      (eval):2:in `visit'
-      ./features/step_definitions/webrat_steps.rb:11:in `/^I go to (.+)$/'
-      features/authors.feature:5:in `When I view the books page for that author'
-    Then I should see the name of that author                # features/step_definitions/author_steps.rb:10
-    And I should see all of the books written by that author # features/step_definitions/author_steps.rb:14
-
-
-    Logged Requests:
-      Request: GET /authors/1.xml
-      Response:
-        <?xml version="1.0" encoding="UTF-8"?>
-        <author>
-          <name>author 1 name</name>
-          <id type="integer">1</id>
-        </author>
-
-
-Failing Scenarios:
-cucumber features/authors.feature:3
+Feature: finding authors
+  
+  Scenario: searching for a particular author
+    Given the site has many authors
+    When I type some text into the author search form
+    And I submit the form
+    Then I should see any authors whose name at least partially matches my search text
 </pre>
 
-Basically, Dupe is telling us that it doesn't know how to interpret the request "/books.xml?author_id=1", which was caused by the line in our AuthorsController books action "@books = Book.find :all, :params => {:author_id => @author.id}". 
-
-Dupe, by default, can only anticipate simply find(:all) and find(<id>) requests. To handle this service mock, we can create a custom intercept mock in features/dupe/custom_mocks/books.rb
+Next, lets fill out the step definitions:
 
 <pre>
-# features/dupe/custom_mocks/books.rb
-<code class="ruby">
-Get %r{/books\.xml\?author_id=(\d+)} do |author_id|
-  Dupe.find(:books) {|b| b.author.id == author_id.to_i }
+# features/step_definitions/search_author_steps.rb
+
+Given /^the site has many authors$/ do
+  Dupe.create(
+    :authors, 
+    [
+      {:name => 'Famous Rubyist'}, 
+      {:name => 'Infamous Rubyist'}, 
+      {:name => 'Weird Haskeller'}
+    ]
+  )
 end
-</code>
+
+When /^I type some text into the author search form$/ do
+  When %{I go to the author search page}
+  When %{I fill in "Search:" with "Ruby"}
+end
+
+When /^I submit the form$/ do
+  When %{I press "Search"}
+end
+
+Then /^I should see any authors whose name at least partially matches my search text$/ do
+  Then %{I should see "Famous Rubyist"}
+  Then %{I should see "Infamous Rubyist"}
+  Then %{I should not see "Weird Haskeller"}
+end
 </pre>
 
-Not unlike a cucumber step definition, this will create a regular expression matcher for the service url, which we then translate into a Dupe resource query. Notice that we pass a block to our Dupe.find method call. Checkout the API docs for more info, but essentially, this translates as "Find all the books written by the author with id X". One little gotcha: notice the to_i on the author_id (b.author.id is an integer, but the regular expression will return string matches). 
+
+Notice that you can use the create method to create several resources in one call by passing an array of hashes to it.
+
+Next, lets create the pertinent paths, routes, controller actions, and views: 
+
+<pre>
+# features/support/paths.rb
+
+when /the author search page/
+  search_authors_path
+</pre>
+
+<pre>
+# config/routes.rb  
+
+ActionController::Routing::Routes.draw do |map|
+  map.resources :books
+  map.resources :authors, :member => 'books', :collection => 'search'
+end
+</pre>
+
+<pre>
+# app/controllers/authors_controller.rb
+
+def search
+  if params[:q]
+    @authors = Author.find(:all, :params => {:q => params[:q]}, :from => :search)
+  end
+end
+</pre>
+
+<pre>
+# app/views/authors/search.haml
+
+= form_tag :method => "get" do 
+  = label_tag :q, "Search:" 
+  = text_field_tag :q 
+  = submit_tag "Search"
+  
+- if @authors
+  .authors
+    - @authors.each do |author|
+      .author
+        .name
+          = author.name
+</pre>
+
+Notice that we've used the :from option in our Author.find call in the search action. Why? :from is your architectural friend. Had we simply left the call as "Author.find :all, :params => {:q => params[:q]}", we would have forced the authors index action on our backend to optionally filter results using a query string. And perhaps if we stopped there, we would have been fine with that. But it's likely that in a real app, you'll end up needing all kinds of services for filtering out results. Piling all of those services into a single index action on the backend will create one giant, fat, messy action. Using :from in this case, ActiveResource will instead send a request like "/authors/search.xml?q=Some+Search+Text", allowing us to easily route that to a "search" action in our backend authors controller.
+
+If you run this cucumber feature, you'll get the following error:
+
+<pre>
+  $ cucumber features/search_authors.feature 
+  
+  Feature: finding authors
+
+    Scenario: searching for a particular author                                          
+      Given the site has many authors                                                    
+      When I type some text into the author search form                                  
+      And I submit the form                                                             
+        No mocked service response found for '/authors/search.xml?q=Ruby' (Dupe::Network::RequestNotFoundError)
+        ./app/controllers/authors_controller.rb:10:in `search'
+        (eval):2:in `click_button'
+        ./features/step_definitions/webrat_steps.rb:15:in `/^I press "([^\"]*)"$/'
+        features/search_authors.feature:6:in `And I submit the form'
+      Then I should see any authors whose name at least partially matches my search text
+
+
+  Failing Scenarios:
+  cucumber features/search_authors.feature:3 # Scenario: searching for a particular author
+  
+</pre>
+
+
+Why did it fail? Basically, Dupe is telling us that it doesn't know how to interpret the request "/authors/search.xml?q=Ruby", which was caused by the line in our AuthorsController search action "@authors = Author.find(:all, :params => {:q => params[:q]}, :from => :search)". 
+
+Dupe, by default, can only anticipate simple find(:all) and find(<id>) requests. To handle this service mock, we can create a custom intercept mock in features/dupe/custom_mocks/authors.rb:
+  
+<pre>
+# features/dupe/custom_mocks/authors.rb
+
+Get %r{/authors/search\.xml\?q=([^&]+)$} do |search_text|
+  Dupe.find(:authors) {|a| a.name.downcase.include? search_text.downcase}
+end
+</pre>
+
+Not unlike a cucumber step definition, this will create a regular expression matcher for the service url, which we then translate into a Dupe resource query. Notice that we pass a block to our Dupe.find method call. Checkout the API docs for more info, but essentially, this translates as "Find all the authors whose name includes the string X".
 
 Now run your feature again and watch it pass! 

@@ -1,0 +1,11 @@
+= form_tag :method => "get" do 
+  = label_tag :q, "Search:" 
+  = text_field_tag :q 
+  = submit_tag "Search"
+  
+- if @authors
+  .authors
+    - @authors.each do |author|
+      .author
+        .name
+          = author.name

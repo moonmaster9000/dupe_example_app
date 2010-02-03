@@ -2,7 +2,11 @@ class AuthorsController < ApplicationController
   
   def books
     @author = Author.find params[:id]
-    @books = Book.find :all, :params => {:author_id => @author.id}
   end
   
+  def search
+    if params[:q]
+      @authors = Author.find(:all, :params => {:q => params[:q]}, :from => :search)
+    end
+  end  
 end

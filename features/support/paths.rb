@@ -16,6 +16,9 @@ module NavigationHelpers
       
     when /the books page for the author with id "(\d+)"/
       books_author_path $1
+      
+    when /the author search page/
+      search_authors_path
 
     else
       raise "Can't find mapping from \"#{page_name}\" to a path.\n" +
