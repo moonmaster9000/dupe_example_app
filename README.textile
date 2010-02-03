@@ -1,6 +1,6 @@
 h1. Dupe tutorial
 
-In this tutorial, you will learn how to quickly and cleanly mock services with Dupe and Cucumber. We'll start with simple resource creation methods, and then DRY up our work using Dupe's facilities for quick resource prototyping.  
+In this tutorial, you will learn how to quickly and cleanly mock services with Dupe and Cucumber. We'll start with simple resource creation methods, and then DRY up our work using Dupe's facilities for quick resource prototyping.
 
 h2. Context
 
@@ -39,6 +39,8 @@ config.frameworks -= [ :active_record]
 </pre>
 
 h2. Feature 1: List all books
+
+During this first feature, we'll learn about the "Dupe.create" method for generating service resources.
 
 Lets create a (naively) simple feature: viewing all books in the library. 
 
@@ -202,6 +204,8 @@ Run "cucumber features/", watch it fail, then update your view to make it pass:
 Now it should pass. 
 
 h2. Refactor
+
+During this section, we'll learn about Dupe model definitions (similar to Factory Girl's "factory" definitions). 
 
 Already, our step definitions are starting to look slightly unwieldy. Just imagine if the client asked us to display genres, publishers, descriptions, etc. Our "Given the library has lots of books" step definition would be clogged with resource creations. 
 
@@ -607,3 +611,9 @@ end
 Not unlike a cucumber step definition, this will create a regular expression matcher for the service url, which we then translate into a Dupe resource query. Notice that we pass a block to our Dupe.find method call. Checkout the API docs for more info, but essentially, this translates as "Find all the authors whose name includes the string X".
 
 Now run your feature again and watch it pass! 
+
+h2. Conclusion
+
+Hopefully, this has given you more than enough information to get you started on cuking your own service-oriented application.
+
+Dupe has many more features to offer, checkout out the README.rdoc at http://github.com/moonmaster9000/dupe
