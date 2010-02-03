@@ -612,6 +612,14 @@ Not unlike a cucumber step definition, this will create a regular expression mat
 
 Now run your feature again and watch it pass! 
 
+h2. What About the Backend?
+
+Let's assume we're done cuking all the features for our frontend. Obviously, our app is only half complete. We can't deploy it yet, because we don't yet have any real services. 
+
+Since we've used ActiveResource to create a service-oriented app, we can write a backend in any language/framework we desire. 
+
+But what about the format of the xml our backend returns? Your backend developers can turn on Dupe request logging (set "Dupe.debug = true" in your features/dupe/definitions/definitions.rb) to see the format of example requests. With Dupe logging on, at the end of each scenario, Dupe will spit out both the request urls and the response XML that it mocked during the course of that scenario. 
+
 h2. Conclusion
 
 Hopefully, this has given you more than enough information to get you started on cuking your own service-oriented application.
