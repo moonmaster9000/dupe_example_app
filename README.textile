@@ -10,7 +10,7 @@ h2. Setting up our application
 
 If you haven't already, install the following gems: cucumber, cucumber-rails, rspec, rspec-rails, webrat, dupe
 
-Lets create our application:
+If you are pre rails-3.1 heres directions on setting up our application. This is not necesary in 3.1:
 
 <pre>
 # rails library
